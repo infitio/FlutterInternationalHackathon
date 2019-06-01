@@ -5,6 +5,9 @@ import 'package:reverb/res/AppStyles.dart';
 import 'package:reverb/res/InfitioStyles.dart';
 import 'package:reverb/datainterface/AppDataInterface.dart';
 import 'package:reverb/widgets/recorder.dart';
+import 'package:firebase_database/firebase_database.dart';
+
+import 'dart:async';
 
 
 class ChatView extends AdharaStatefulWidget{
@@ -26,6 +29,15 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
   List<String> languages = ["te","en", "hi", "ta", "kn", "ml"];
   String _selectedLanguage;
 
+  int _counter;
+  DatabaseReference _counterRef;
+  DatabaseReference _messagesRef;
+  StreamSubscription<Event> _counterSubscription;
+  StreamSubscription<Event> _messagesSubscription;
+  bool _anchorToBottom = false;
+
+  String _kTestKey = 'content';
+  DatabaseError _error;
 
 
   //BackDrop animations
@@ -40,6 +52,35 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
         duration: const Duration(milliseconds: 100),
         value: 1.0
     );
+
+    _counterRef = FirebaseDatabase.instance.reference().child('counter');
+    // Demonstrates configuring the database directly
+    final FirebaseDatabase database = FirebaseDatabase();
+    _messagesRef = database.reference().child('messages');
+    database.reference().child('counter').once().then((DataSnapshot snapshot) {
+      print('Connected to second database and read ${snapshot.value}');
+    });
+    database.setPersistenceEnabled(true);
+    database.setPersistenceCacheSizeBytes(10000000);
+    _counterRef.keepSynced(true);
+    _counterSubscription = _counterRef.onValue.listen((Event event) {
+      setState(() {
+        _error = null;
+        _counter = event.snapshot.value ?? 0;
+      });
+    }, onError: (Object o) {
+      final DatabaseError error = o;
+      setState(() {
+        _error = error;
+      });
+    });
+    _messagesSubscription =
+        _messagesRef.limitToLast(10).onChildAdded.listen((Event event) {
+          print('Child added: ${event.snapshot.value}');
+        }, onError: (Object o) {
+          final DatabaseError error = o;
+          print('Error: ${error.code} ${error.message}');
+        });
   }
 
   @override
@@ -96,9 +137,25 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
             ),
             new Row(
               children: <Widget>[
-                Recorder('en', (String message){
-                  print("message from recorder $message");
-//                  TODO send message from here
+                Recorder('en', (String message) async{
+                  final TransactionResult transactionResult =
+                      await _counterRef.runTransaction((MutableData mutableData) async {
+                    mutableData.value = (mutableData.value ?? 0) + 1;
+                    return mutableData;
+                  });
+
+                  if (transactionResult.committed) {
+                    _messagesRef.push().set(<String, String>{
+                      'content': message,
+                      'language': 'en',
+                      'sender': '1'
+                    });
+                  } else {
+                    print('Transaction not committed.');
+                    if (transactionResult.error != null) {
+                      print(transactionResult.error.message);
+                    }
+                  }
                 }),
                 new IconButton(
                   icon: new Icon(Icons.send, color: InfitioColors.denim_blue,),
