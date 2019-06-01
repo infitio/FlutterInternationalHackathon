@@ -38,8 +38,6 @@ const _SCOPES = const [SpeechApi.CloudPlatformScope];
 Future<Map<String, Object>> speechToText(uri) async {
   print("uri : $uri");
   File file = File(uri);
-  List<String> s = await file.readAsLines();
-  print("S>> $s");
   List<int> fileBytes = file.readAsBytesSync();
   print("fileBytes $fileBytes");
   String fileBase64 = base64Encode(fileBytes);
