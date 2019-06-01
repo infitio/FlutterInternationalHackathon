@@ -108,9 +108,28 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
 
   //Reply-Box and Submit button
   final TextEditingController _chatController = new TextEditingController();
-  void _handleSubmit(String text) async{
-    String translatedText = await translateText(text: text, language: _selectedLanguage);
+  void _handleSubmit(String message) async{
+    String translatedText = await translateText(text: message, language: _selectedLanguage);
     Message m = Message(false, translatedText);
+
+    final TransactionResult transactionResult =
+    await _counterRef.runTransaction((MutableData mutableData) async {
+      mutableData.value = (mutableData.value ?? 0) + 1;
+      return mutableData;
+    });
+
+    if (transactionResult.committed) {
+      _messagesRef.push().set(<String, String>{
+        'content': message,
+        'language': 'en',
+        'sender': '1'
+      });
+    } else {
+      print('Transaction not committed.');
+      if (transactionResult.error != null) {
+        print(transactionResult.error.message);
+      }
+    }
     messages.insert(0, m);
     _chatController.clear();
 
