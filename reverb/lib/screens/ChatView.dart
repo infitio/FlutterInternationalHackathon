@@ -13,20 +13,25 @@ class ChatView extends AdharaStatefulWidget{
 }
 
 class Message{
+
   String content;
-  bool isUser;
+  int userId;
+
   Message(
-      this.isUser,
+      this.userId,
       this.content
       );
+
+  isMine(int myId){
+    return this.userId == myId;
+  }
 }
 
 class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStateMixin{
   List<Message> messages = [];
   List<String> languages = ["te","en", "hi", "ta", "kn", "ml"];
-  String _selectedLanguage;
-
-
+  String _selectedLanguage = "en";
+  int userId = DateTime.now().millisecondsSinceEpoch;
 
   //BackDrop animations
   AnimationController _controller;
@@ -69,7 +74,7 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
   final TextEditingController _chatController = new TextEditingController();
   void _handleSubmit(String text) async{
     String translatedText = await translateText(text: text, language: _selectedLanguage);
-    Message m = Message(false, translatedText);
+    Message m = Message(userId, translatedText);
     messages.insert(0, m);
     _chatController.clear();
 
@@ -121,7 +126,7 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
     BorderRadius borderRadius;
     double borderRad = 25.0;
 
-    if(!agronomistMessage.isUser){
+    if(agronomistMessage.userId == userId){
       bodyColor = InfitioColors.white_three;
       contentColor = InfitioColors.charcoal_grey;
       bodyAlignment = Alignment.topLeft;
