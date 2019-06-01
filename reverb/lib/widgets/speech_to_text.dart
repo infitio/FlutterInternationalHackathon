@@ -1,23 +1,9 @@
-import 'dart:io';
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:googleapis/speech/v1.dart';
 import 'package:googleapis_auth/auth_io.dart';
-import 'package:flutter/services.dart';
-import 'dart:convert';
-import 'package:adhara/adhara.dart';
-
-//{
-//  "type": "service_account",
-//  "project_id": "",
-//  "private_key_id": "",
-//  "private_key": "",
-//  "client_email": "",
-//  "client_id": "",
-//  "auth_uri": "",
-//  "token_uri": "",
-//  "auth_provider_x509_cert_url": "",
-//  "client_x509_cert_url": ""
-//}
 
 final _credentials = new ServiceAccountCredentials.fromJson(r'''{
   "type": "service_account",
@@ -36,7 +22,7 @@ const _SCOPES = const [SpeechApi.CloudPlatformScope];
 
 
 Future<Map<String, Object>> speechToText(String uri, String language) async {
-  print("uri : $uri");
+  print("uri : $uri in language $language");
   File file = File(uri);
   List<int> fileBytes = file.readAsBytesSync();
   print("fileBytes $fileBytes");
@@ -53,7 +39,7 @@ Future<Map<String, Object>> speechToText(String uri, String language) async {
     "config": {
       "encoding": "AMR",
       "sampleRateHertz": 8000,
-      "languageCode": "te-IN", //language ?? "en-US"
+      "languageCode": language,
     }
   };
   final _recognizeRequest = RecognizeRequest.fromJson(_json);

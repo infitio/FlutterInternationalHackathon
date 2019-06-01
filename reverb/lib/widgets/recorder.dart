@@ -26,7 +26,8 @@ class _RecorderState extends AdharaState<Recorder>{
   String get tag => "Recorder";
   FlutterSound flutterSound;
   var _recorderSubscription;
-  var recording = false;
+  bool recording = false;
+  bool analyzing = false;
   String soundFilePath;
 
   @override
@@ -69,7 +70,7 @@ class _RecorderState extends AdharaState<Recorder>{
   stopRecorder() async{
     String result = await flutterSound.stopRecorder();
     print('stopRecorder: $result');
-
+    setState((){ analyzing = true; });
     if (_recorderSubscription != null) {
       _recorderSubscription.cancel();
       _recorderSubscription = null;
@@ -80,5 +81,6 @@ class _RecorderState extends AdharaState<Recorder>{
       widget.onMessage(alternatives[0]['transcript']);
     }
     setState((){ recording = false; });
+    setState((){ analyzing = false; });
   }
 }
