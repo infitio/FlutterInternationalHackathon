@@ -3,6 +3,7 @@ import 'package:adhara/adhara.dart';
 import 'package:reverb/res/InfitioColors.dart';
 import 'package:reverb/res/AppStyles.dart';
 import 'package:reverb/res/InfitioStyles.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:reverb/datainterface/AppDataInterface.dart';
 import 'package:reverb/widgets/recorder.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -16,18 +17,36 @@ class ChatView extends AdharaStatefulWidget{
 }
 
 class Message{
+
   String content;
-  bool isUser;
+  String userId;
+  String language;
+
   Message(
-      this.isUser,
-      this.content
+      this.userId,
+      this.content,
+      {this.language:""}
       );
+
+  isMine(String myId){
+    return this.userId == myId;
+  }
+
+  toJSON(){
+    return {
+      'sender': this.userId,
+      'content': this.content,
+      'language': this.language
+    };
+  }
+
 }
 
 class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStateMixin{
   List<Message> messages = [];
-  List<String> languages = ["te","en", "hi", "ta", "kn", "ml"];
-  String _selectedLanguage;
+  List<String> languages = ["en-IN", "es-US", "fr-FR", "ta-IN", "te-IN", "hi-IN", "ml-IN"];
+  String _selectedLanguage = "te-IN";
+  String userId = DateTime.now().millisecondsSinceEpoch.toString();
 
   int _counter;
   DatabaseReference _counterRef;
@@ -38,7 +57,6 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
 
   String _kTestKey = 'content';
   DatabaseError _error;
-
 
   //BackDrop animations
   AnimationController _controller;
@@ -108,9 +126,9 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
 
   //Reply-Box and Submit button
   final TextEditingController _chatController = new TextEditingController();
-  void _handleSubmit(String message) async{
-    //String translatedText = await translateText(text: message, language: _selectedLanguage);
-    Message m = Message(false, message);
+  void _handleSubmit(String text) async{
+//    String translatedText = await translateText(text: text, language: _selectedLanguage);
+    Message m = Message(userId, text, language: _selectedLanguage);
 
     final TransactionResult transactionResult =
     await _counterRef.runTransaction((MutableData mutableData) async {
@@ -119,11 +137,7 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
     });
 
     if (transactionResult.committed) {
-      _messagesRef.push().set(<String, String>{
-        'content': message,
-        'language': 'en',
-        'sender': '1'
-      });
+      _messagesRef.push().set(m.toJSON());
     } else {
       print('Transaction not committed.');
       if (transactionResult.error != null) {
@@ -156,25 +170,8 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
             ),
             new Row(
               children: <Widget>[
-                Recorder('en', (String message) async{
-                  final TransactionResult transactionResult =
-                      await _counterRef.runTransaction((MutableData mutableData) async {
-                    mutableData.value = (mutableData.value ?? 0) + 1;
-                    return mutableData;
-                  });
-
-                  if (transactionResult.committed) {
-                    _messagesRef.push().set(<String, String>{
-                      'content': message,
-                      'language': 'en',
-                      'sender': '1'
-                    });
-                  } else {
-                    print('Transaction not committed.');
-                    if (transactionResult.error != null) {
-                      print(transactionResult.error.message);
-                    }
-                  }
+                Recorder(_selectedLanguage, (String message){
+                  _handleSubmit(message);
                 }),
                 new IconButton(
                   icon: new Icon(Icons.send, color: InfitioColors.denim_blue,),
@@ -190,7 +187,7 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
 
 
   //Format for Farmer's message
-  Widget messageBox(dynamic agronomistMessage){
+  Widget messageBox(Message agronomistMessage){
 
     Color bodyColor, contentColor;
     Alignment bodyAlignment;
@@ -198,7 +195,7 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
     BorderRadius borderRadius;
     double borderRad = 25.0;
 
-    if(!agronomistMessage.isUser){
+    if(agronomistMessage.userId == userId){
       bodyColor = InfitioColors.white_three;
       contentColor = InfitioColors.charcoal_grey;
       bodyAlignment = Alignment.topLeft;
@@ -226,15 +223,21 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
     );
   }
 
+  Future<Message> onIncomingMessage(Map message) async{
+    String translatedText = await translateText(text: message['content'], language: _selectedLanguage);
+    print("ttext ${translatedText}");
+    return Message(message['sender'],translatedText);
+  }
 
   //message content
   Widget messageContent(
-      dynamic agronomistMessage,
+      Message agronomistMessage,
       Color _bodyColor,
       Color _contentColor,
       TextStyle _textStyle,
       BorderRadius _borderRadius
       ){
+
     return Stack(
       alignment: Alignment.topRight,
       children: <Widget>[
@@ -253,7 +256,7 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: <Widget>[
                     Container(
-                      child: Text('${agronomistMessage['content']}', style: _textStyle,),
+                      child: Text('${agronomistMessage.content}', style: _textStyle,),
                       padding: EdgeInsets.all(15.0),
                     ),
                     Container(
@@ -281,19 +284,23 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
   }
 
   //Creating chat body
-  Widget chatBody(dynamic data) {
-
+  Widget chatBody(List<Message> data) {
     List<Widget> sliverChildList = [];
-    Map<String, dynamic> mappedData = Map.castFrom<dynamic, dynamic, String, dynamic>(data);
+    data.forEach((_){
+      sliverChildList.add(messageBox(_));
+    });
+    /*Map<String, dynamic> mappedData = Map.castFrom<dynamic, dynamic, String, dynamic>(data);
     List<dynamic>  messages = mappedData.values.toList();
     if(messages.isEmpty){
       sliverChildList.add(Text("Welcome"));
     }else{
-      sliverChildList = messages.map((dynamic n) {
-        return messageBox(n);
-      }).toList();
+      messages.forEach((dynamic n) async{
+        Message m = await onIncomingMessage(n);
+        sliverChildList.add(messageBox(m)) ;
+      });
     }
-
+    print(sliverChildList.length);
+*/
     return SliverPadding(
         padding: EdgeInsets.all(20.0),
         sliver: SliverList(delegate: SliverChildListDelegate(sliverChildList))
@@ -371,31 +378,32 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
           new PositionedTransition(
             rect: animation,
             child: Material(
-              borderRadius: const BorderRadius.only(
-                topRight: const Radius.circular(16.0),
-                topLeft: const Radius.circular(16.0),
-              ),
-              elevation: 12.0,
-              child: Column(
-                children: <Widget>[
-                  StreamBuilder(builder: (context, snapshot){
-                    if(snapshot.hasData){
-                      return Flexible(
-                        child: CustomScrollView(
-                          reverse: true,
-                          slivers: <Widget>[
-                            chatBody(snapshot.data)
-                          ],
-                        ),
-                      );
-                    }else{
-                      return Container();
-                    }
-                  }, stream: getMessagesFromFireBase(),),
-                  Divider(),
-                  chatEnvironment()
-                ],
-              )
+                borderRadius: const BorderRadius.only(
+                  topRight: const Radius.circular(16.0),
+                  topLeft: const Radius.circular(16.0),
+                ),
+                elevation: 12.0,
+                child: Column(
+                  children: <Widget>[
+                    StreamBuilder(builder: (context, snapshot){
+                      if(snapshot.hasData){
+                        print("123 ${snapshot.data}");
+                        return Flexible(
+                          child: CustomScrollView(
+                            reverse: true,
+                            slivers: <Widget>[
+                              chatBody(snapshot.data)
+                            ],
+                          ),
+                        );
+                      }else{
+                        return Container();
+                      }
+                    }, stream: getMessagesFromFireBase(),),
+                    Divider(),
+                    chatEnvironment()
+                  ],
+                )
             ),
           ),
         ],
@@ -403,8 +411,25 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
     );
   }
 
-  Stream<Map<dynamic, dynamic>> getMessagesFromFireBase(){
-    return _messagesRef.onValue.map((e) => e.snapshot.value);
+  Stream<List<Message>> getMessagesFromFireBase(){
+    return _messagesRef.orderByKey().onValue.asyncMap((e) async {
+      print("e.snapshot.value ${e.snapshot.value}");
+      Map<String, dynamic> mappedData = Map.castFrom<dynamic, dynamic, String, dynamic>(e.snapshot.value);
+      List<dynamic>  messages = mappedData.values.toList();
+      List<Message> ms = [];
+      if(messages.isEmpty){
+
+      }else{
+        for(int i=0; i<messages.length; i++){
+          print("1");
+          ms.add(await onIncomingMessage(messages[i]));
+          print("2");
+        }
+      }
+      print(ms);
+      print("3");
+      return ms;
+    });
   }
 
   String get tag => "ChatView";
