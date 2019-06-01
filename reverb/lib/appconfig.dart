@@ -15,11 +15,11 @@ class AppConfig extends Config{
         :"assets/config/dev.json";
   }
 
-  NetworkProvider get networkProvider => AppNetworkProvider(this);
+  /*NetworkProvider get networkProvider => AppNetworkProvider(this);
 
   DataInterface get dataInterface => AppDataInterface(this);
 
-  String get fetchingImage => "assets/animations/fetching.gif";
+  String get fetchingImage => "assets/animations/fetching.gif";*/
 
   Map<String, String> get languageResources => {
     "en": "assets/languages/en.properties",
