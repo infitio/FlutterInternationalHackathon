@@ -97,8 +97,7 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
             new Row(
               children: <Widget>[
                 Recorder('en', (String message){
-                  print("message from recorder $message");
-//                  TODO send message from here
+                  _handleSubmit(message);
                 }),
                 new IconButton(
                   icon: new Icon(Icons.send, color: InfitioColors.denim_blue,),
