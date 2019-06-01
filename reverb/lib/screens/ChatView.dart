@@ -95,10 +95,6 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
                   onPressed: null,
                 ),
                 new IconButton(
-                  icon: new Icon(Icons.attach_file, color: InfitioColors.dark_grey_blue,),
-                  onPressed: null,
-                ),
-                new IconButton(
                   icon: new Icon(Icons.send, color: InfitioColors.denim_blue,),
                   onPressed: () => _handleSubmit(_chatController.text),
                 ),
@@ -168,8 +164,8 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
                   maxWidth: 300.0,
                 ),
                 decoration: new BoxDecoration(
-                  color: _bodyColor,
-                  borderRadius: _borderRadius
+                    color: _bodyColor,
+                    borderRadius: _borderRadius
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -225,7 +221,77 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
   //main build
   @override
   Widget build(BuildContext context) {
-    return Container();
+    return container();
+  }
+
+
+  //Screen Container
+  Widget container(){
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Reverb"),
+        elevation: 0.0,
+        actions: <Widget>[
+          new IconButton(
+              icon: AnimatedIcon(
+                  icon: AnimatedIcons.arrow_menu,
+                  progress: _controller.view
+              ),
+              onPressed : () {
+                _controller.fling(velocity: _isPanelVisible? -1.0 : 1.0);
+              }
+          )
+        ],
+      ),
+      body: LayoutBuilder(builder: _buildStack),
+    );
+  }
+
+
+  //chat body
+  Widget _buildStack(BuildContext context, BoxConstraints constraints){
+    final Animation<RelativeRect> animation = _getPanelAnimation(constraints);
+    final ThemeData theme = Theme.of(context);
+    return Container(
+      color: theme.primaryColor,
+      child: Stack(
+        children: <Widget>[
+          Container(
+            child: Text('The Thope jfdhbjh ausbdam uabs cj asjba sjasb j asjabsjdhbasiuc j ashjcaj j ahusjcbaj cjahscjab aj',
+              style: AppStyles.agronomistMessage,),
+            constraints: BoxConstraints(
+                minWidth: constraints.maxWidth,
+                minHeight: constraints.maxHeight
+            ),
+            padding: EdgeInsets.all(30.0),
+          ),
+          new PositionedTransition(
+            rect: animation,
+            child: Material(
+              borderRadius: const BorderRadius.only(
+                topRight: const Radius.circular(16.0),
+                topLeft: const Radius.circular(16.0),
+              ),
+              elevation: 12.0,
+              child: Column(
+                children: <Widget>[
+                  new Flexible(
+                    child: CustomScrollView(
+                      reverse: true,
+                      slivers: <Widget>[
+                        chatBody(messages)
+                      ],
+                    ),
+                  ),
+                  Divider(),
+                  chatEnvironment()
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   String get tag => "ChatView";
