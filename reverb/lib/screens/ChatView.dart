@@ -56,7 +56,7 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
     _counterRef = FirebaseDatabase.instance.reference().child('counter');
     // Demonstrates configuring the database directly
     final FirebaseDatabase database = FirebaseDatabase();
-    _messagesRef = database.reference().child('text-messages');
+    _messagesRef = database.reference().child('messages');
     database.reference().child('counter').once().then((DataSnapshot snapshot) {
       print('Connected to second database and read ${snapshot.value}');
     });
@@ -376,33 +376,35 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
                 topLeft: const Radius.circular(16.0),
               ),
               elevation: 12.0,
-              child: StreamBuilder(
-                  stream: _messagesRef.onValue,
-                  builder: (context, snapshot){
-                   if(snapshot.hasData){
-                     return Column(
-                       children: <Widget>[
-                         new Flexible(
-                           child: CustomScrollView(
-                             reverse: true,
-                             slivers: <Widget>[
-                               chatBody(snapshot.data)
-                             ],
-                           ),
-                         ),
-                         Divider(),
-                         chatEnvironment()
-                       ],
-                     );
-                   }else{
-                     return Container();
-                   }
-                  })
+              child: Column(
+                children: <Widget>[
+                  StreamBuilder(builder: (context, snapshot){
+                    if(snapshot.hasData){
+                      return Flexible(
+                        child: CustomScrollView(
+                          reverse: true,
+                          slivers: <Widget>[
+                            chatBody(snapshot.data)
+                          ],
+                        ),
+                      );
+                    }else{
+                      return Container();
+                    }
+                  }, stream: getMessagesFromFireBase(),),
+                  Divider(),
+                  chatEnvironment()
+                ],
+              )
             ),
           ),
         ],
       ),
     );
+  }
+
+  Stream<Map<dynamic, dynamic>> getMessagesFromFireBase(){
+    return _messagesRef.onValue.map((e) => e.snapshot.value);
   }
 
   String get tag => "ChatView";
