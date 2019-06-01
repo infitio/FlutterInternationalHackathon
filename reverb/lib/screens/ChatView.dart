@@ -3,6 +3,7 @@ import 'package:adhara/adhara.dart';
 import 'package:reverb/res/InfitioColors.dart';
 import 'package:reverb/res/AppStyles.dart';
 import 'package:reverb/res/InfitioStyles.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:reverb/datainterface/AppDataInterface.dart';
 import 'package:reverb/widgets/recorder.dart';
 
@@ -23,10 +24,8 @@ class Message{
 
 class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStateMixin{
   List<Message> messages = [];
-  List<String> languages = ["te","en", "hi", "ta", "kn", "ml"];
-  String _selectedLanguage;
-
-
+  List<String> languages = ["en-IN", "es-US", "fr-FR", "ta-IN", "te-IN", "hi-IN", "ml-IN"];
+  String _selectedLanguage = "es-US";
 
   //BackDrop animations
   AnimationController _controller;
@@ -68,8 +67,8 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
   //Reply-Box and Submit button
   final TextEditingController _chatController = new TextEditingController();
   void _handleSubmit(String text) async{
-    String translatedText = await translateText(text: text, language: _selectedLanguage);
-    Message m = Message(false, translatedText);
+//    String translatedText = await translateText(text: text, language: _selectedLanguage);
+    Message m = Message(false, text);
     messages.insert(0, m);
     _chatController.clear();
 
@@ -96,7 +95,7 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
             ),
             new Row(
               children: <Widget>[
-                Recorder('en', (String message){
+                Recorder(_selectedLanguage, (String message){
                   _handleSubmit(message);
                 }),
                 new IconButton(
@@ -148,7 +147,6 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
         child: messageContent(agronomistMessage, bodyColor, contentColor, textStyle, borderRadius)
     );
   }
-
 
   //message content
   Widget messageContent(
