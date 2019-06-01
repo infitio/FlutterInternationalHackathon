@@ -26,6 +26,7 @@ dependencies:
   adhara: ^0.3.4
   googleapis: ^0.53.0
   googleapis_auth: ^0.2.7
+  flutter_sound: ^1.4.1
 
 dev_dependencies:
   flutter_test:
