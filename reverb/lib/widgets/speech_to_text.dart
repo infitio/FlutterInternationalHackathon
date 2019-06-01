@@ -45,7 +45,7 @@ Future<Map<String, Object>> speechToText(String uri, String language) async {
   final _recognizeRequest = RecognizeRequest.fromJson(_json);
   RecognizeResponse response = await speech.speech.recognize(_recognizeRequest);
   print("response.results ${response.results}");
-  if(response!=null){
+  if(response!=null && response.results!=null){
     for (SpeechRecognitionResult result in response.results) {
       print("result.toJson() ${result.toJson()}");
       return result.toJson();

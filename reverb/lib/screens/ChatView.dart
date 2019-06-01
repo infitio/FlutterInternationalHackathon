@@ -6,6 +6,9 @@ import 'package:reverb/res/InfitioStyles.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:reverb/datainterface/AppDataInterface.dart';
 import 'package:reverb/widgets/recorder.dart';
+import 'package:firebase_database/firebase_database.dart';
+
+import 'dart:async';
 
 
 class ChatView extends AdharaStatefulWidget{
@@ -16,23 +19,44 @@ class ChatView extends AdharaStatefulWidget{
 class Message{
 
   String content;
-  int userId;
+  String userId;
+  String language;
 
   Message(
       this.userId,
       this.content,
+      {this.language:""}
       );
 
-  isMine(int myId){
+  isMine(String myId){
     return this.userId == myId;
   }
+
+  toJSON(){
+    return {
+      'sender': this.userId,
+      'content': this.content,
+      'language': this.language
+    };
+  }
+
 }
 
 class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStateMixin{
   List<Message> messages = [];
   List<String> languages = ["en-IN", "es-US", "fr-FR", "ta-IN", "te-IN", "hi-IN", "ml-IN"];
-  String _selectedLanguage = "es-US";
-  int userId = DateTime.now().millisecondsSinceEpoch;
+  String _selectedLanguage = "te-IN";
+  String userId = DateTime.now().millisecondsSinceEpoch.toString();
+
+  int _counter;
+  DatabaseReference _counterRef;
+  DatabaseReference _messagesRef;
+  StreamSubscription<Event> _counterSubscription;
+  StreamSubscription<Event> _messagesSubscription;
+  bool _anchorToBottom = false;
+
+  String _kTestKey = 'content';
+  DatabaseError _error;
 
   //BackDrop animations
   AnimationController _controller;
@@ -46,6 +70,35 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
         duration: const Duration(milliseconds: 100),
         value: 1.0
     );
+
+    _counterRef = FirebaseDatabase.instance.reference().child('counter');
+    // Demonstrates configuring the database directly
+    final FirebaseDatabase database = FirebaseDatabase();
+    _messagesRef = database.reference().child('messages');
+    database.reference().child('counter').once().then((DataSnapshot snapshot) {
+      print('Connected to second database and read ${snapshot.value}');
+    });
+    database.setPersistenceEnabled(true);
+    database.setPersistenceCacheSizeBytes(10000000);
+    _counterRef.keepSynced(true);
+    _counterSubscription = _counterRef.onValue.listen((Event event) {
+      setState(() {
+        _error = null;
+        _counter = event.snapshot.value ?? 0;
+      });
+    }, onError: (Object o) {
+      final DatabaseError error = o;
+      setState(() {
+        _error = error;
+      });
+    });
+    _messagesSubscription =
+        _messagesRef.limitToLast(10).onChildAdded.listen((Event event) {
+          print('Child added: ${event.snapshot.value}');
+        }, onError: (Object o) {
+          final DatabaseError error = o;
+          print('Error: ${error.code} ${error.message}');
+        });
   }
 
   @override
@@ -75,7 +128,22 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
   final TextEditingController _chatController = new TextEditingController();
   void _handleSubmit(String text) async{
 //    String translatedText = await translateText(text: text, language: _selectedLanguage);
-    Message m = Message(userId, text);
+    Message m = Message(userId, text, language: _selectedLanguage);
+
+    final TransactionResult transactionResult =
+    await _counterRef.runTransaction((MutableData mutableData) async {
+      mutableData.value = (mutableData.value ?? 0) + 1;
+      return mutableData;
+    });
+
+    if (transactionResult.committed) {
+      _messagesRef.push().set(m.toJSON());
+    } else {
+      print('Transaction not committed.');
+      if (transactionResult.error != null) {
+        print(transactionResult.error.message);
+      }
+    }
     messages.insert(0, m);
     _chatController.clear();
 
@@ -156,7 +224,8 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
   }
 
   Future<Message> onIncomingMessage(Map message) async{
-    String translatedText = await translateText(text: message['content'], language: _selectedLanguage)
+    String translatedText = await translateText(text: message['content'], language: _selectedLanguage);
+    print("ttext ${translatedText}");
     return Message(message['sender'],translatedText);
   }
 
@@ -215,18 +284,23 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
   }
 
   //Creating chat body
-  Widget chatBody(List<Message> p) {
-
+  Widget chatBody(List<Message> data) {
     List<Widget> sliverChildList = [];
-
-    if(p.isEmpty){
+    data.forEach((_){
+      sliverChildList.add(messageBox(_));
+    });
+    /*Map<String, dynamic> mappedData = Map.castFrom<dynamic, dynamic, String, dynamic>(data);
+    List<dynamic>  messages = mappedData.values.toList();
+    if(messages.isEmpty){
       sliverChildList.add(Text("Welcome"));
     }else{
-      sliverChildList = p.map((Message n) {
-        return messageBox(n);
-      }).toList();
+      messages.forEach((dynamic n) async{
+        Message m = await onIncomingMessage(n);
+        sliverChildList.add(messageBox(m)) ;
+      });
     }
-
+    print(sliverChildList.length);
+*/
     return SliverPadding(
         padding: EdgeInsets.all(20.0),
         sliver: SliverList(delegate: SliverChildListDelegate(sliverChildList))
@@ -304,30 +378,58 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
           new PositionedTransition(
             rect: animation,
             child: Material(
-              borderRadius: const BorderRadius.only(
-                topRight: const Radius.circular(16.0),
-                topLeft: const Radius.circular(16.0),
-              ),
-              elevation: 12.0,
-              child: Column(
-                children: <Widget>[
-                  new Flexible(
-                    child: CustomScrollView(
-                      reverse: true,
-                      slivers: <Widget>[
-                        chatBody(messages)
-                      ],
-                    ),
-                  ),
-                  Divider(),
-                  chatEnvironment()
-                ],
-              ),
+                borderRadius: const BorderRadius.only(
+                  topRight: const Radius.circular(16.0),
+                  topLeft: const Radius.circular(16.0),
+                ),
+                elevation: 12.0,
+                child: Column(
+                  children: <Widget>[
+                    StreamBuilder(builder: (context, snapshot){
+                      if(snapshot.hasData){
+                        print("123 ${snapshot.data}");
+                        return Flexible(
+                          child: CustomScrollView(
+                            reverse: true,
+                            slivers: <Widget>[
+                              chatBody(snapshot.data)
+                            ],
+                          ),
+                        );
+                      }else{
+                        return Container();
+                      }
+                    }, stream: getMessagesFromFireBase(),),
+                    Divider(),
+                    chatEnvironment()
+                  ],
+                )
             ),
           ),
         ],
       ),
     );
+  }
+
+  Stream<List<Message>> getMessagesFromFireBase(){
+    return _messagesRef.orderByKey().onValue.asyncMap((e) async {
+      print("e.snapshot.value ${e.snapshot.value}");
+      Map<String, dynamic> mappedData = Map.castFrom<dynamic, dynamic, String, dynamic>(e.snapshot.value);
+      List<dynamic>  messages = mappedData.values.toList();
+      List<Message> ms = [];
+      if(messages.isEmpty){
+
+      }else{
+        for(int i=0; i<messages.length; i++){
+          print("1");
+          ms.add(await onIncomingMessage(messages[i]));
+          print("2");
+        }
+      }
+      print(ms);
+      print("3");
+      return ms;
+    });
   }
 
   String get tag => "ChatView";
