@@ -95,10 +95,6 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
                   onPressed: null,
                 ),
                 new IconButton(
-                  icon: new Icon(Icons.attach_file, color: InfitioColors.dark_grey_blue,),
-                  onPressed: null,
-                ),
-                new IconButton(
                   icon: new Icon(Icons.send, color: InfitioColors.denim_blue,),
                   onPressed: () => _handleSubmit(_chatController.text),
                 ),
@@ -233,8 +229,7 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
   Widget container(){
     return Scaffold(
       appBar: AppBar(
-        title: Text('Rishi', style: InfitioStyles.textStyle21),
-        leading: CloseButton(),
+        title: Text("Reverb"),
         elevation: 0.0,
         actions: <Widget>[
           new IconButton(
