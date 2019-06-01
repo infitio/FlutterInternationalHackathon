@@ -56,7 +56,7 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
     _counterRef = FirebaseDatabase.instance.reference().child('counter');
     // Demonstrates configuring the database directly
     final FirebaseDatabase database = FirebaseDatabase();
-    _messagesRef = database.reference().child('messages');
+    _messagesRef = database.reference().child('text-messages');
     database.reference().child('counter').once().then((DataSnapshot snapshot) {
       print('Connected to second database and read ${snapshot.value}');
     });
@@ -109,8 +109,8 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
   //Reply-Box and Submit button
   final TextEditingController _chatController = new TextEditingController();
   void _handleSubmit(String message) async{
-    String translatedText = await translateText(text: message, language: _selectedLanguage);
-    Message m = Message(false, translatedText);
+    //String translatedText = await translateText(text: message, language: _selectedLanguage);
+    Message m = Message(false, message);
 
     final TransactionResult transactionResult =
     await _counterRef.runTransaction((MutableData mutableData) async {
@@ -190,7 +190,7 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
 
 
   //Format for Farmer's message
-  Widget messageBox(Message agronomistMessage){
+  Widget messageBox(dynamic agronomistMessage){
 
     Color bodyColor, contentColor;
     Alignment bodyAlignment;
@@ -229,7 +229,7 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
 
   //message content
   Widget messageContent(
-      Message agronomistMessage,
+      dynamic agronomistMessage,
       Color _bodyColor,
       Color _contentColor,
       TextStyle _textStyle,
@@ -253,7 +253,7 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: <Widget>[
                     Container(
-                      child: Text('${agronomistMessage.content}', style: _textStyle,),
+                      child: Text('${agronomistMessage['content']}', style: _textStyle,),
                       padding: EdgeInsets.all(15.0),
                     ),
                     Container(
@@ -281,14 +281,15 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
   }
 
   //Creating chat body
-  Widget chatBody(List<Message> p) {
+  Widget chatBody(dynamic data) {
 
     List<Widget> sliverChildList = [];
-
-    if(p.isEmpty){
+    Map<String, dynamic> mappedData = Map.castFrom<dynamic, dynamic, String, dynamic>(data);
+    List<dynamic>  messages = mappedData.values.toList();
+    if(messages.isEmpty){
       sliverChildList.add(Text("Welcome"));
     }else{
-      sliverChildList = p.map((Message n) {
+      sliverChildList = messages.map((dynamic n) {
         return messageBox(n);
       }).toList();
     }
@@ -375,20 +376,28 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
                 topLeft: const Radius.circular(16.0),
               ),
               elevation: 12.0,
-              child: Column(
-                children: <Widget>[
-                  new Flexible(
-                    child: CustomScrollView(
-                      reverse: true,
-                      slivers: <Widget>[
-                        chatBody(messages)
-                      ],
-                    ),
-                  ),
-                  Divider(),
-                  chatEnvironment()
-                ],
-              ),
+              child: StreamBuilder(
+                  stream: _messagesRef.onValue,
+                  builder: (context, snapshot){
+                   if(snapshot.hasData){
+                     return Column(
+                       children: <Widget>[
+                         new Flexible(
+                           child: CustomScrollView(
+                             reverse: true,
+                             slivers: <Widget>[
+                               chatBody(snapshot.data)
+                             ],
+                           ),
+                         ),
+                         Divider(),
+                         chatEnvironment()
+                       ],
+                     );
+                   }else{
+                     return Container();
+                   }
+                  })
             ),
           ),
         ],
