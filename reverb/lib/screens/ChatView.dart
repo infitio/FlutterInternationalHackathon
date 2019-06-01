@@ -20,7 +20,7 @@ class Message{
 
   Message(
       this.userId,
-      this.content
+      this.content,
       );
 
   isMine(int myId){
@@ -155,6 +155,11 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
     );
   }
 
+  Future<Message> onIncomingMessage(Map message) async{
+    String translatedText = await translateText(text: message['content'], language: _selectedLanguage)
+    return Message(message['sender'],translatedText);
+  }
+
   //message content
   Widget messageContent(
       Message agronomistMessage,
@@ -163,6 +168,7 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
       TextStyle _textStyle,
       BorderRadius _borderRadius
       ){
+
     return Stack(
       alignment: Alignment.topRight,
       children: <Widget>[
