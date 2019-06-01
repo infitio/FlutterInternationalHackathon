@@ -11,7 +11,6 @@ class AppConfig extends Config{
   String get configFile{
     return isReleaseMode()
         ?"assets/config/production.json"
-//        ?"assets/config/demo.json"
         :"assets/config/dev.json";
   }
 
@@ -23,8 +22,6 @@ class AppConfig extends Config{
 
   Map<String, String> get languageResources => {
     "en": "assets/languages/en.properties",
-    "te": "assets/languages/te.properties",
-    "ka": "assets/languages/ka.properties",
   };
 
   List<String> get sentryIgnoreStrings => [
@@ -34,13 +31,6 @@ class AppConfig extends Config{
     "Connection timed out",
     "SocketException: Failed host lookup",
     "The method 'inheritFromWidgetOfExactType' was called on null. Receiver: null Tried calling: inheritFromWidgetOfExactType",
-
   ];
-
-  static const int MAX_IDEA_IMAGE_SIZE_IN_KB = 800;
-  static const int MAX_IDEA_GIF_SIZE_IN_KB = 2*1024;
-  static const int MAX_IDEA_VIDEO_SIZE_IN_KB = 10*1024;
-  static const int MAX_PROFILE_IMAGE_SIZE_IN_KB = 800;
-  static const int MAX_DOCUMENT_SIZE_IN_KB = 10*1024;
 
 }

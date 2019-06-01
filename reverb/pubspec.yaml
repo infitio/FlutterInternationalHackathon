@@ -23,7 +23,6 @@ dependencies:
   adhara: ^0.3.4
   googleapis: ^0.53.0
   googleapis_auth: ^0.2.7
-  http: ^0.12.0+2
 
 dev_dependencies:
   flutter_test:
@@ -45,6 +44,7 @@ flutter:
   assets:
       - assets/config/credentials.json
       - assets/config/dev.json
+      - assets/languages/en.properties
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
