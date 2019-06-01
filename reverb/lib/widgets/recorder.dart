@@ -33,8 +33,8 @@ class _RecorderState extends AdharaState<Recorder>{
 
   startRecorder() async{
     final dir = await getTemporaryDirectory();
-    print("dir $dir");
-    String path = await flutterSound.startRecorder(dir.toString()+"/sd5.mp4");
+    print("dir ${dir.path}");
+    String path = await flutterSound.startRecorder(dir.path+"/sd5.mp4");
     print('startRecorder: $path');
 
     _recorderSubscription = flutterSound.onRecorderStateChanged.listen((e) {
