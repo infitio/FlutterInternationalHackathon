@@ -156,7 +156,7 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
   }
 
   Future<Message> onIncomingMessage(Map message) async{
-    String translatedText = await translateText(text: message['content'], language: _selectedLanguage)
+    String translatedText = await translateText(text: message['content'], language: _selectedLanguage);
     return Message(message['sender'],translatedText);
   }
 
