@@ -4,6 +4,8 @@ import 'package:reverb/res/InfitioColors.dart';
 import 'package:reverb/res/AppStyles.dart';
 import 'package:reverb/res/InfitioStyles.dart';
 import 'package:reverb/datainterface/AppDataInterface.dart';
+import 'package:reverb/widgets/recorder.dart';
+
 
 class ChatView extends AdharaStatefulWidget{
   @override
@@ -94,10 +96,10 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
             ),
             new Row(
               children: <Widget>[
-                new IconButton(
-                  icon: new Icon(Icons.mic_none, color: InfitioColors.cool_grey,),
-                  onPressed: null,
-                ),
+                Recorder('en', (String message){
+                  print("message from recorder $message");
+//                  TODO send message from here
+                }),
                 new IconButton(
                   icon: new Icon(Icons.send, color: InfitioColors.denim_blue,),
                   onPressed: () => _handleSubmit(_chatController.text),

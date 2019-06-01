@@ -1,10 +1,20 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:adhara/adhara.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:reverb/widgets/speech_to_text.dart';
+import 'package:reverb/res/InfitioColors.dart';
+
+typedef OnRecordedMessage(String message);
+
 
 class Recorder extends AdharaStatefulWidget{
+
+  final String language;
+  final OnRecordedMessage onMessage;
+
+  Recorder(this.language, this.onMessage);
+
   @override
   _RecorderState createState() => _RecorderState();
 }
@@ -15,6 +25,7 @@ class _RecorderState extends AdharaState<Recorder>{
   FlutterSound flutterSound;
   var _recorderSubscription;
   var recording = false;
+  String soundFilePath;
 
   @override
   void initState() {
@@ -23,20 +34,23 @@ class _RecorderState extends AdharaState<Recorder>{
   }
 
   @override
+  fetchData(Resources r) async {
+    final dir = await getApplicationDocumentsDirectory();
+    print("dir ${dir.path}");
+    soundFilePath = dir.path+"/sd5.mp3";
+    print("path $soundFilePath");
+  }
+
+  @override
   Widget build(BuildContext context) {
-    print(flutterSound);
     return (flutterSound == null) ? Container(): IconButton(
-        icon: recording? Icon(Icons.stop): Icon(Icons.mic),
+        icon: Icon(recording?Icons.stop:Icons.mic, color: InfitioColors.cool_grey,),
         onPressed: recording? stopRecorder: startRecorder
     );
   }
 
   startRecorder() async{
-    final dir = await getTemporaryDirectory();
-    print("dir ${dir.path}");
-    String path = await flutterSound.startRecorder(dir.path+"/sd5.mp4");
-    print('startRecorder: $path');
-
+    await flutterSound.startRecorder(soundFilePath);
     _recorderSubscription = flutterSound.onRecorderStateChanged.listen((e) {
       DateTime date = new DateTime.fromMillisecondsSinceEpoch(e.currentPosition.toInt());
 //      String txt = DateFormat('mm:ss:SS', 'en_US').format(date);
@@ -53,6 +67,11 @@ class _RecorderState extends AdharaState<Recorder>{
     if (_recorderSubscription != null) {
       _recorderSubscription.cancel();
       _recorderSubscription = null;
+    }
+    Map<String, Object> response = await speechToText(soundFilePath);
+    List<Map> alternatives = response['alternatives'];
+    if(alternatives.length > 0){
+      widget.onMessage(alternatives[0]['transcript']);
     }
     setState((){
       recording = false;
