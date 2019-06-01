@@ -1,0 +1,7 @@
+{
+  "baseURL": "http://sample.com/",
+  "webSocketURL": "http://ideaspacechat.coromandel.biz/",
+  "dbName": "ideaspace311.db",
+  "dbVersion": 1,
+  "sentryDSN": "https://825e77851e1841e397d26e5439ac79fb@sentry.io/1281125"
+}
