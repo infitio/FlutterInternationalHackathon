@@ -35,6 +35,7 @@ final _credentials = new ServiceAccountCredentials.fromJson(r'''{
 const _SCOPES = const [SpeechApi.CloudPlatformScope];
 
 void speechToText(uri) {
+  var text;
   print("uri : $uri");
   File file = File(uri);
   List<int> file_bytes = file.readAsBytesSync();
@@ -59,7 +60,9 @@ void speechToText(uri) {
       print("response.results ${response.results}");
       for (var result in response.results) {
         print(result.toJson());
+        text = result.toJson();
       }
     });
   });
+  return text;
 }
