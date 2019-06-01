@@ -65,5 +65,4 @@ Future<Map<String, Object>> speechToText(uri) async {
         print(result.toJson());
       }
     });
-  });
 }
