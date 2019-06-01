@@ -3,6 +3,7 @@ import 'package:adhara/adhara.dart';
 import 'package:reverb/res/InfitioColors.dart';
 import 'package:reverb/res/AppStyles.dart';
 import 'package:reverb/res/InfitioStyles.dart';
+import 'package:reverb/datainterface/AppDataInterface.dart';
 import 'package:reverb/widgets/recorder.dart';
 
 
@@ -22,12 +23,14 @@ class Message{
 
 class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStateMixin{
   List<Message> messages = [];
+  List<String> languages = ["te","en", "hi", "ta", "kn", "ml"];
+  String _selectedLanguage;
 
 
 
   //BackDrop animations
   AnimationController _controller;
-  static const _PANEL_HEADER_HEIGHT = 300.0;
+  static const _PANEL_HEADER_HEIGHT = 450.0;
 
   @override
   void initState() {
@@ -64,19 +67,20 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
 
   //Reply-Box and Submit button
   final TextEditingController _chatController = new TextEditingController();
-  void _handleSubmit(String text) {
-    Message m = Message(true, text);
+  void _handleSubmit(String text) async{
+    String translatedText = await translateText(text: text, language: _selectedLanguage);
+    Message m = Message(false, translatedText);
+    messages.insert(0, m);
     _chatController.clear();
 
     setState(() {
-      messages.insert(0, m);
     });
   }
   Widget chatEnvironment() {
     return IconTheme(
       data: new IconThemeData(color: Colors.blue),
       child: new Container(
-        margin: const EdgeInsets.only(left: 8.0, right: 8.0, bottom: 30.0),
+        margin: const EdgeInsets.only(left: 8.0, right: 8.0),
         child: new Row(
           children: <Widget>[
             new Flexible(
@@ -118,7 +122,7 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
     BorderRadius borderRadius;
     double borderRad = 25.0;
 
-    if(agronomistMessage.isUser){
+    if(!agronomistMessage.isUser){
       bodyColor = InfitioColors.white_three;
       contentColor = InfitioColors.charcoal_grey;
       bodyAlignment = Alignment.topLeft;
@@ -206,7 +210,7 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
     List<Widget> sliverChildList = [];
 
     if(p.isEmpty){
-      sliverChildList.add(Text("Please enter some shit first before looking for my beautiful designs"));
+      sliverChildList.add(Text("Welcome"));
     }else{
       sliverChildList = p.map((Message n) {
         return messageBox(n);
@@ -259,8 +263,28 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
       child: Stack(
         children: <Widget>[
           Container(
-            child: Text('The Thope jfdhbjh ausbdam uabs cj asjba sjasb j asjabsjdhbasiuc j ashjcaj j ahusjcbaj cjahscjab aj',
-              style: AppStyles.agronomistMessage,),
+            alignment: Alignment.topCenter,
+            child: Column(
+              children: <Widget>[
+                DropdownButton(
+                  hint: Text("Please choose language"),
+                  style: InfitioStyles.farmerMessage,
+                  value: _selectedLanguage,
+                  items: languages.map((lang) {
+                    return DropdownMenuItem(
+                      child: Text(lang),
+                      value: lang,
+                    );}).toList(),
+                  onChanged: (newValue){
+                    setState(() {
+                      _selectedLanguage = newValue;
+                    });
+                  },
+                  iconEnabledColor: InfitioColors.white_three,
+                ),
+                Text("Please select your language", style: InfitioStyles.agronomistMessage,)
+              ],
+            ),
             constraints: BoxConstraints(
                 minWidth: constraints.maxWidth,
                 minHeight: constraints.maxHeight
