@@ -4,6 +4,8 @@ import 'package:flutter_sound/flutter_sound.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:reverb/widgets/speech_to_text.dart';
 import 'package:reverb/res/InfitioColors.dart';
+import 'package:flutter_sound/android_encoder.dart';
+import 'package:flutter_sound/ios_quality.dart';
 
 typedef OnRecordedMessage(String message);
 
@@ -37,7 +39,7 @@ class _RecorderState extends AdharaState<Recorder>{
   fetchData(Resources r) async {
     final dir = await getApplicationDocumentsDirectory();
     print("dir ${dir.path}");
-    soundFilePath = dir.path+"/sd5.mp3";
+    soundFilePath = dir.path+"/sd5.amr";
     print("path $soundFilePath");
   }
 
@@ -50,7 +52,11 @@ class _RecorderState extends AdharaState<Recorder>{
   }
 
   startRecorder() async{
-    await flutterSound.startRecorder(soundFilePath);
+    await flutterSound.startRecorder(soundFilePath,
+        sampleRate: 8000,
+        androidEncoder: AndroidEncoder.AMR_NB,
+        iosQuality: IosQuality.HIGH
+    );
     _recorderSubscription = flutterSound.onRecorderStateChanged.listen((e) {
       DateTime date = new DateTime.fromMillisecondsSinceEpoch(e.currentPosition.toInt());
 //      String txt = DateFormat('mm:ss:SS', 'en_US').format(date);
@@ -68,13 +74,11 @@ class _RecorderState extends AdharaState<Recorder>{
       _recorderSubscription.cancel();
       _recorderSubscription = null;
     }
-    Map<String, Object> response = await speechToText(soundFilePath);
+    Map<String, Object> response = await speechToText(soundFilePath, widget.language);
     List<Map> alternatives = response['alternatives'];
     if(alternatives.length > 0){
       widget.onMessage(alternatives[0]['transcript']);
     }
-    setState((){
-      recording = false;
-    });
+    setState((){ recording = false; });
   }
 }
