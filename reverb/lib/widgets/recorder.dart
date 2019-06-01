@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:adhara/adhara.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:reverb/widgets/speech_to_text.dart';
 
 class Recorder extends AdharaStatefulWidget{
   @override
@@ -54,6 +55,7 @@ class _RecorderState extends AdharaState<Recorder>{
       _recorderSubscription.cancel();
       _recorderSubscription = null;
     }
+    speechToText("/data/user/0/com.example.reverb/cache/sd5.mp4");
     setState((){
       recording = false;
     });
