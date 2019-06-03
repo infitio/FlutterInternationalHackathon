@@ -9,7 +9,13 @@ class AppDataInterface extends DataInterface{
 
   AppDataInterface(Config config):super(config);
 
+  storeUser(Map user) async {
+    await this.keyValueStorageProvider.setData("user", user);
+  }
 
+  Future<Map> getLoggedInUser() async {
+    return await this.keyValueStorageProvider.getData("user");
+  }
 
 }
 

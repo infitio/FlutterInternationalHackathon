@@ -1,12 +1,13 @@
 import "package:adhara/adhara.dart";
 import 'package:reverb/datainterfaces.dart';
 import "package:reverb/reverb_app.dart";
+import 'package:reverb/google_auth.dart';
 
 class AppConfig extends Config{
 
   static get appVersion => "3.2.0";
 
-  get container => ReverbApp();
+  get container => GoogleAuthApp();
 
   String get configFile{
     return isReleaseMode()
@@ -14,9 +15,10 @@ class AppConfig extends Config{
         :"assets/config/dev.json";
   }
 
+  DataInterface get dataInterface => AppDataInterface(this);
+
   /*NetworkProvider get networkProvider => AppNetworkProvider(this);
 
-  DataInterface get dataInterface => AppDataInterface(this);
 
   String get fetchingImage => "assets/animations/fetching.gif";*/
 

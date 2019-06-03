@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "683606981936-cbnq6qrlbam6p7o21b1kdmc0u9kc7v6q.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.reverb",
+            "certificate_hash": "4bd5e8c9b7100c0e3b15adac7bec77b112a9f9ab"
+          }
+        },
+        {
           "client_id": "683606981936-0um102tbqp7fvj2t7erac21n94ntd853.apps.googleusercontent.com",
           "client_type": 3
         }
