@@ -1,13 +1,12 @@
 import "package:adhara/adhara.dart";
 import 'package:reverb/datainterfaces.dart';
-import "package:reverb/reverb_app.dart";
-import 'package:reverb/google_auth.dart';
+import 'package:reverb/screens/AuthScreen.dart';
 
 class AppConfig extends Config{
 
   static get appVersion => "3.2.0";
 
-  get container => GoogleAuthApp();
+  get container => AuthenticationApp();
 
   String get configFile{
     return isReleaseMode()

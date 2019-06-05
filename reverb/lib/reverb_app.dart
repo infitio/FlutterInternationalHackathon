@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:adhara/adhara.dart';
-import 'package:reverb/screens/ChatView.dart';
+import 'package:reverb/screens/ChatList.dart';
 import 'package:reverb/widgets/recorder.dart';
 
 class ReverbApp extends StatelessWidget {
@@ -30,7 +30,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: ChatView()
+        body: Chatlist()
     );
   }
 }

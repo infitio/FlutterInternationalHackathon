@@ -27,6 +27,14 @@ class InfitioStyles {
     fontSize: 20.0
   );
 
+  static const blue_title = const TextStyle(
+      color:  InfitioColors.denim_blue,
+      fontWeight: FontWeight.w600,
+      fontFamily: "SFProText",
+      fontStyle:  FontStyle.normal,
+      fontSize: 20.0
+  );
+
   static const textStyle9 = const TextStyle(
     color:  InfitioColors.white,
     fontWeight: FontWeight.w700,

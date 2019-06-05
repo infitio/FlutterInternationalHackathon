@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:adhara/adhara.dart';
 import 'package:reverb/res/InfitioColors.dart';
-import 'package:reverb/res/AppStyles.dart';
 import 'package:reverb/res/InfitioStyles.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:reverb/datainterface/AppDataInterface.dart';
 import 'package:reverb/widgets/recorder.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:reverb/google_auth.dart';
+import 'package:reverb/widgets/messageContainer.dart';
 
 import 'dart:async';
 
@@ -76,7 +77,6 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
     final FirebaseDatabase database = FirebaseDatabase();
     _messagesRef = database.reference().child('messages');
     database.reference().child('counter').once().then((DataSnapshot snapshot) {
-      print('Connected to second database and read ${snapshot.value}');
     });
     database.setPersistenceEnabled(true);
     database.setPersistenceCacheSizeBytes(10000000);
@@ -94,7 +94,6 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
     });
     _messagesSubscription =
         _messagesRef.limitToLast(10).onChildAdded.listen((Event event) {
-          print('Child added: ${event.snapshot.value}');
         }, onError: (Object o) {
           final DatabaseError error = o;
           print('Error: ${error.code} ${error.message}');
@@ -173,7 +172,7 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
                 Recorder(_selectedLanguage, (String message){
                   _handleSubmit(message);
                 }),
-                new IconButton(
+                IconButton(
                   icon: new Icon(Icons.send, color: InfitioColors.denim_blue,),
                   onPressed: () => _handleSubmit(_chatController.text),
                 ),
@@ -185,128 +184,22 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
     );
   }
 
-
-  //Format for Farmer's message
-  Widget messageBox(Message agronomistMessage){
-
-    Color bodyColor, contentColor;
-    Alignment bodyAlignment;
-    TextStyle textStyle;
-    BorderRadius borderRadius;
-    double borderRad = 25.0;
-
-    if(agronomistMessage.userId == userId){
-      bodyColor = InfitioColors.white_three;
-      contentColor = InfitioColors.charcoal_grey;
-      bodyAlignment = Alignment.topLeft;
-      textStyle = AppStyles.farmerMessage;
-      borderRadius = BorderRadius.only(
-        topRight: Radius.circular(borderRad),
-        topLeft: Radius.circular(borderRad),
-        bottomRight: Radius.circular(borderRad),
-      );
-    }else{
-      bodyColor = InfitioColors.cool_blue;
-      contentColor = InfitioColors.white_three;
-      bodyAlignment = Alignment.topRight;
-      textStyle = AppStyles.agronomistMessage;
-      borderRadius = BorderRadius.only(
-        topRight: Radius.circular(borderRad),
-        topLeft: Radius.circular(borderRad),
-        bottomLeft: Radius.circular(borderRad),
-      );
-    }
-    return Container(
-        alignment: bodyAlignment,
-        padding: EdgeInsets.all(10.0),
-        child: messageContent(agronomistMessage, bodyColor, contentColor, textStyle, borderRadius)
-    );
-  }
-
   Future<Message> onIncomingMessage(Map message) async{
     String translatedText = await translateText(text: message['content'], language: _selectedLanguage);
-    print("ttext ${translatedText}");
     return Message(message['sender'],translatedText);
   }
-
-  //message content
-  Widget messageContent(
-      Message agronomistMessage,
-      Color _bodyColor,
-      Color _contentColor,
-      TextStyle _textStyle,
-      BorderRadius _borderRadius
-      ){
-
-    return Stack(
-      alignment: Alignment.topRight,
-      children: <Widget>[
-        Wrap(
-          children: <Widget>[
-            Container(
-                padding: EdgeInsets.only(right: 30.0),
-                constraints: BoxConstraints(
-                  maxWidth: 300.0,
-                ),
-                decoration: new BoxDecoration(
-                    color: _bodyColor,
-                    borderRadius: _borderRadius
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: <Widget>[
-                    Container(
-                      child: Text('${agronomistMessage.content}', style: _textStyle,),
-                      padding: EdgeInsets.all(15.0),
-                    ),
-                    Container(
-                      child: Text('12:00 PM', style: AppStyles.timestamp1, textAlign: TextAlign.right,),
-                      padding: EdgeInsets.only(right: 15.0, bottom: 10.0),
-                    )
-                  ],
-                )
-            )
-          ],
-        ),
-        Container(
-          alignment: Alignment(0.0, 0.0),
-          width: 36.0,
-          height: 36.0,
-          decoration: new BoxDecoration(
-              color: _bodyColor,
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2.0)
-          ),
-          child: Icon(Icons.volume_up, color: _contentColor,),
-        ),
-      ],
-    );
-  }
-
+  
   //Creating chat body
   Widget chatBody(List<Message> data) {
     List<Widget> sliverChildList = [];
     data.forEach((_){
-      sliverChildList.add(messageBox(_));
+      sliverChildList.add(MessageContainer(_,_.isMine(userId)));
     });
-    /*Map<String, dynamic> mappedData = Map.castFrom<dynamic, dynamic, String, dynamic>(data);
-    List<dynamic>  messages = mappedData.values.toList();
-    if(messages.isEmpty){
-      sliverChildList.add(Text("Welcome"));
-    }else{
-      messages.forEach((dynamic n) async{
-        Message m = await onIncomingMessage(n);
-        sliverChildList.add(messageBox(m)) ;
-      });
-    }
-    print(sliverChildList.length);
-*/
     return SliverPadding(
         padding: EdgeInsets.all(20.0),
         sliver: SliverList(delegate: SliverChildListDelegate(sliverChildList))
     );
   }
-
 
   //main build
   @override
@@ -319,6 +212,7 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
   Widget container(){
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: InfitioColors.denim_blue,
         title: Text("Reverb"),
         elevation: 0.0,
         actions: <Widget>[
@@ -343,7 +237,7 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
     final Animation<RelativeRect> animation = _getPanelAnimation(constraints);
     final ThemeData theme = Theme.of(context);
     return Container(
-      color: theme.primaryColor,
+      color: InfitioColors.denim_blue,
       child: Stack(
         children: <Widget>[
           Container(
@@ -366,7 +260,10 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
                   },
                   iconEnabledColor: InfitioColors.white_three,
                 ),
-                Text("Please select your language", style: InfitioStyles.agronomistMessage,)
+                Text("Please select your language", style: InfitioStyles.agronomistMessage,),
+                Padding(
+                  padding: EdgeInsets.all(30.0),
+                ),
               ],
             ),
             constraints: BoxConstraints(
@@ -387,7 +284,6 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
                   children: <Widget>[
                     StreamBuilder(builder: (context, snapshot){
                       if(snapshot.hasData){
-                        print("123 ${snapshot.data}");
                         return Flexible(
                           child: CustomScrollView(
                             reverse: true,
@@ -413,7 +309,6 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
 
   Stream<List<Message>> getMessagesFromFireBase(){
     return _messagesRef.orderByKey().onValue.asyncMap((e) async {
-      print("e.snapshot.value ${e.snapshot.value}");
       Map<String, dynamic> mappedData = Map.castFrom<dynamic, dynamic, String, dynamic>(e.snapshot.value);
       List<dynamic>  messages = mappedData.values.toList();
       List<Message> ms = [];
@@ -421,13 +316,9 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
 
       }else{
         for(int i=0; i<messages.length; i++){
-          print("1");
           ms.add(await onIncomingMessage(messages[i]));
-          print("2");
         }
       }
-      print(ms);
-      print("3");
       return ms;
     });
   }
