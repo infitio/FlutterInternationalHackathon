@@ -5,8 +5,6 @@ import 'package:reverb/res/InfitioStyles.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:reverb/datainterface/AppDataInterface.dart';
 import 'package:reverb/widgets/recorder.dart';
-import 'package:firebase_database/firebase_database.dart';
-import 'package:reverb/google_auth.dart';
 import 'package:reverb/widgets/messageContainer.dart';
 
 import 'dart:async';

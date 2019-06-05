@@ -61,13 +61,14 @@ class _MyHomePageState extends AdharaState<MyHomePage> {
     return Scaffold(
 
       body: Container(
+        height: MediaQuery.of(context).size.height,
+        width: MediaQuery.of(context).size.width,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             Container(
               color: InfitioColors.cool_blue,
-              height: 500,
               child: Column(
                 children: <Widget>[
                   Padding(
@@ -81,13 +82,15 @@ class _MyHomePageState extends AdharaState<MyHomePage> {
                       padding: EdgeInsets.all(30.0)
                   ),
                   Text("Language is no more a barrier", textAlign: TextAlign.center, style: InfitioStyles.textStyle4,),
+                  Padding(
+                      padding: EdgeInsets.all(10.0)
+                  ),
 
                 ],
               ),
             ),
             Container(
               child: Container(
-                width: 300.0,
                 alignment: Alignment.center,
                 padding: EdgeInsets.only(top: 50.0),
                 child: GoogleSignInButton(
@@ -97,7 +100,7 @@ class _MyHomePageState extends AdharaState<MyHomePage> {
               ),
             ),
             Padding(
-                padding: EdgeInsets.all(30.0)
+                padding: EdgeInsets.all(20.0)
             ),
           ],
         ),
