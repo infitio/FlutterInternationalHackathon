@@ -20,10 +20,13 @@ class Message{
   String content;
   String userId;
   String language;
+  int timeStamp;
+
 
   Message(
       this.userId,
       this.content,
+      this.timeStamp,
       {this.language:""}
       );
 
@@ -35,6 +38,7 @@ class Message{
     return {
       'sender': this.userId,
       'content': this.content,
+      'time': this.timeStamp,
       'language': this.language
     };
   }
@@ -45,7 +49,20 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
   List<Message> messages = [];
   List<String> languages = ["en-IN", "es-US", "fr-FR", "ta-IN", "te-IN", "hi-IN", "ml-IN"];
   String _selectedLanguage = "te-IN";
-  String userId = DateTime.now().millisecondsSinceEpoch.toString();
+  String userId;
+  Map user;
+  bool isLoggedIn;
+
+
+  @override
+  fetchData(Resources r) async{
+    user = await (r.dataInterface as AppDataInterface).getLoggedInUser();
+    if(user != null){
+      isLoggedIn = true;
+      userId = user['name'];
+    }
+    setState((){});
+  }
 
   int _counter;
   DatabaseReference _counterRef;
@@ -125,7 +142,8 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
   final TextEditingController _chatController = new TextEditingController();
   void _handleSubmit(String text) async{
 //    String translatedText = await translateText(text: text, language: _selectedLanguage);
-    Message m = Message(userId, text, language: _selectedLanguage);
+    var t = DateTime.now().millisecondsSinceEpoch;
+    Message m = Message(userId, text, t, language: _selectedLanguage);
 
     final TransactionResult transactionResult =
     await _counterRef.runTransaction((MutableData mutableData) async {
@@ -141,6 +159,7 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
         print(transactionResult.error.message);
       }
     }
+
     messages.insert(0, m);
     _chatController.clear();
 
@@ -184,7 +203,7 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
 
   Future<Message> onIncomingMessage(Map message) async{
     String translatedText = await translateText(text: message['content'], language: _selectedLanguage);
-    return Message(message['sender'],translatedText);
+    return Message(message['sender'], translatedText,message['timeStamp']);
   }
   
   //Creating chat body
@@ -295,7 +314,7 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
                       }
                     }, stream: getMessagesFromFireBase(),),
                     Divider(),
-                    chatEnvironment()
+                    chatEnvironment(),
                   ],
                 )
             ),
@@ -314,12 +333,12 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
 
       }else{
         for(int i=0; i<messages.length; i++){
-          ms.add(await onIncomingMessage(messages[i]));
+          ms.add(await onIncomingMessage(messages[messages.length-i-1]));
         }
       }
       return ms;
+
     });
   }
-
   String get tag => "ChatView";
 }

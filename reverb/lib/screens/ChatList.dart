@@ -52,7 +52,7 @@ class _ChatlistState extends AdharaState<Chatlist>{
 
     Widget _buildWidgetList(){
       List<Widget> sliverChildList = [SizedBox(height: 6.0,)];
-      for(int i=0;i<=3;i++){
+      for(int i=0;i<=1;i++){
         sliverChildList.add(ChatTile(user));
         sliverChildList.add(Divider(indent: 70.0,));
       }
@@ -60,25 +60,26 @@ class _ChatlistState extends AdharaState<Chatlist>{
     }
 
     Scaffold homeScaffold = Scaffold(
-      body: Paginator(
-          listType: PaginatorTypes.CUSTOM_SCROLL_VIEW,
-          children: <Widget>[
-            SliverAppBar(
-              title: Text("Chats", style: InfitioStyles.title),
-              actions: <Widget>[
-                IconButton(
-                    icon: Icon(Icons.exit_to_app),
-                     color: InfitioColors.denim_blue,
-                    onPressed: () {_signOut();}
-                    )
-              ],
-              automaticallyImplyLeading: false,
-              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-              bottom: PreferredSize(child: titleSeparator, preferredSize: Size(64.0, 2.0)),
-            ),
-            _buildWidgetList()
-          ],
-        ),
+      body: !isFirstLoadComplete? Text("Loading.."):
+      Paginator(
+        listType: PaginatorTypes.CUSTOM_SCROLL_VIEW,
+        children: <Widget>[
+          SliverAppBar(
+            title: Text("Chats", style: InfitioStyles.title),
+            actions: <Widget>[
+              IconButton(
+                  icon: Icon(Icons.exit_to_app),
+                  color: InfitioColors.denim_blue,
+                  onPressed: () {_signOut();}
+              )
+            ],
+            automaticallyImplyLeading: false,
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+            bottom: PreferredSize(child: titleSeparator, preferredSize: Size(64.0, 2.0)),
+          ),
+          _buildWidgetList()
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
           child: Icon(Icons.add_circle, color: InfitioColors.white, size: 24.0,),
           onPressed: (){
@@ -86,7 +87,6 @@ class _ChatlistState extends AdharaState<Chatlist>{
           }
       ),
     );
-
     return homeScaffold;
   }
 }

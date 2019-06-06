@@ -61,6 +61,7 @@ class _MessageContainerState extends AdharaState<MessageContainer>{
       TextStyle _textStyle,
       BorderRadius _borderRadius
       ){
+
     return Stack(
       alignment: Alignment.topRight,
       children: <Widget>[
