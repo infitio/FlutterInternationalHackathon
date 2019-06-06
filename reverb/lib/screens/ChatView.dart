@@ -203,14 +203,14 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
 
   Future<Message> onIncomingMessage(Map message) async{
     String translatedText = await translateText(text: message['content'], language: _selectedLanguage);
-    return Message(message['sender'], translatedText,message['timeStamp']);
+    return Message(message['sender'], translatedText,message['time']);
   }
   
   //Creating chat body
   Widget chatBody(List<Message> data) {
     List<Widget> sliverChildList = [];
-    data.forEach((_){
-      sliverChildList.add(MessageContainer(_,_.isMine(userId)));
+    data.forEach((_message){
+      sliverChildList.add(MessageContainer(_message,_message.isMine(userId)));
     });
     return SliverPadding(
         padding: EdgeInsets.all(20.0),
@@ -333,9 +333,10 @@ class _ChatViewState extends AdharaState<ChatView> with SingleTickerProviderStat
 
       }else{
         for(int i=0; i<messages.length; i++){
-          ms.add(await onIncomingMessage(messages[messages.length-i-1]));
+          ms.add(await onIncomingMessage(messages[i]));
         }
       }
+      ms.sort((b,a) => a.timeStamp.compareTo(b.timeStamp));
       return ms;
 
     });

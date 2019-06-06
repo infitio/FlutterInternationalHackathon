@@ -61,6 +61,18 @@ class _MessageContainerState extends AdharaState<MessageContainer>{
       TextStyle _textStyle,
       BorderRadius _borderRadius
       ){
+    var hour;
+    var minute;
+    if(widget.message.timeStamp != null){
+      hour = DateTime.fromMillisecondsSinceEpoch(widget.message.timeStamp).hour;
+      minute = DateTime.fromMillisecondsSinceEpoch(widget.message.timeStamp).minute;
+    }else{
+      hour = "--";
+      minute = "--";
+      print(widget.message.timeStamp);
+    }
+
+
 
     return Stack(
       alignment: Alignment.topRight,
@@ -84,7 +96,7 @@ class _MessageContainerState extends AdharaState<MessageContainer>{
                       padding: EdgeInsets.all(15.0),
                     ),
                     Container(
-                      child: Text('12:00 PM', style: AppStyles.timestamp1, textAlign: TextAlign.right,),
+                      child: Text('$hour:$minute', style: AppStyles.timestamp1, textAlign: TextAlign.right,),
                       padding: EdgeInsets.only(right: 15.0, bottom: 10.0),
                     )
                   ],
